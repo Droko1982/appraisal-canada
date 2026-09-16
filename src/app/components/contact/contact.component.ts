@@ -114,6 +114,11 @@ export class ContactComponent implements OnInit {
       _template: 'table',
       _captcha: 'false',
       _cc: LEAD_CC,
+      // Without this the lead email arrives from FormSubmit's own address, so
+      // hitting Reply answers FormSubmit instead of the client and the quote
+      // never reaches them. FormSubmit only auto-detects a field literally
+      // named "email"; ours is "Email", so set the reply address explicitly.
+      _replyto: this.contacDto.emailAddress,
       Source: 'Appraisal Canada — appraisalcanada.ca',
       'First Name': this.contacDto.firstName,
       'Last Name': this.contacDto.lastName,
@@ -170,6 +175,10 @@ export class ContactComponent implements OnInit {
         delete payload[key];
       }
     }
+    // Email is a required field, so this should never fire; it guards against a
+    // future edit making it optional. FormSubmit tolerates a blank _replyto
+    // (verified), but sending one would set an empty Reply-To header, so drop it.
+    if (!String(payload['_replyto'] ?? '').trim()) { delete payload['_replyto']; }
 
     this.http.post<FormSubmitResponse>(FORMSUBMIT_ENDPOINT, payload, {
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }
