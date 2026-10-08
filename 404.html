@@ -328,6 +328,25 @@
         if (typeof window.gtag === 'function') {
           window.gtag('event', 'page_not_found', { page_location: url, page_referrer: document.referrer || '' });
         }
+
+        /* Make Reply on the lead email go to the client, not to FormSubmit.
+           FormSubmit only auto-detects a field named "email" and ours is
+           "Email", so attach _replyto on submit. Built here rather than sitting
+           in the HTML so that with JS off the form posts byte-for-byte as it
+           did before, rather than carrying an empty Reply-To header. */
+        var form = document.querySelector('form[action*="formsubmit.co"]');
+        var emailField = document.getElementById('e');
+        if (form && emailField) {
+          form.addEventListener('submit', function () {
+            var v = (emailField.value || '').trim();
+            if (!v) { return; }
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = '_replyto';
+            hidden.value = v;
+            form.appendChild(hidden);
+          });
+        }
       } catch (e) { /* never let this break the page */ }
     })();
   </script>
